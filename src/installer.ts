@@ -114,9 +114,9 @@ export async function getGo(
         `Received HTTP status code ${err.httpStatusCode}.  This usually indicates the rate limit has been exceeded`
       );
     } else {
-      core.info(err.message);
+      core.info((err as Error).message);
     }
-    core.debug(err.stack);
+    core.debug((err as Error).stack ?? '');
     core.info('Falling back to download directly from Go');
   }
 
@@ -160,7 +160,7 @@ async function resolveVersionFromManifest(
     return info?.resolvedVersion;
   } catch (err) {
     core.info('Unable to resolve a version from the manifest...');
-    core.debug(err.message);
+    core.debug((err as Error).message);
   }
 }
 
@@ -202,6 +202,17 @@ async function cacheWindowsDir(
   fs.mkdirSync(path.dirname(defaultToolCacheDir), {recursive: true});
   fs.symlinkSync(actualToolCacheDir, defaultToolCacheDir, 'junction');
   core.info(`Created link ${defaultToolCacheDir} => ${actualToolCacheDir}`);
+
+  const actualToolCacheCompleteFile = `${actualToolCacheDir}.complete`;
+  const defaultToolCacheCompleteFile = `${defaultToolCacheDir}.complete`;
+  fs.symlinkSync(
+    actualToolCacheCompleteFile,
+    defaultToolCacheCompleteFile,
+    'file'
+  );
+  core.info(
+    `Created link ${defaultToolCacheCompleteFile} => ${actualToolCacheCompleteFile}`
+  );
 
   // make outer code to continue using toolcache as if it were installed on c:
   // restore toolcache root to default drive c:
